@@ -5,7 +5,7 @@
 if exists("g:loaded_bugspots")
   finish
 endif
-let g:loaded_pairyaung = 1
+let g:loaded_bugspots = 1
 let s:save_cpo = &cpo
 set cpo&vim
 

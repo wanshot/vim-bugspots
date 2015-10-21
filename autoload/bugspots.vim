@@ -4,6 +4,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
+
 if !exists('g:bugspots_git_executable')
   let g:bugspots_git_executable = "git log -p --name-only --pretty=format:'.%ct %s' > log"
 endif
@@ -26,12 +27,9 @@ function! s:LogMaker()
     for line in lines
         if line[0] == "."
             let dict = {}
-            " non match
             if "" !=#  matchstr(line, '\v(fix|close)\c')
                 let dict["unix_ts"] = matchstr(line, '\v\d{10}', 0)
                 call add(list_log, dict)
-            "let dict["msg"] = matchstr(line, '\v\d{10}\s(.)+', 0)[10:]
-            "else
             endif
         elseif line !=# ""
             call add(list_log , line)
@@ -45,12 +43,11 @@ function! s:LogFormatter(ll)
     let tmp = []
     let result = []
     for var in a:ll
-        if type(var) == 4
+        if type(var) == type({})
             call add(tmp, {"unix_ts": var["unix_ts"]})
-        endif
-        if type(var) == 1
+        else
             try
-                let d = tmp[-1]
+                let d = deepcopy(tmp[-1])
                 let d["file"] = var
                 call add(result, d)
             catch
@@ -63,12 +60,7 @@ endfunction
 
 
 function! s:GetMinTimeStamp(ll)
-    let idx = 0
-    while type(a:ll[idx]) == 2
-        let idx += 1
-        continue
-    endwhile
-    let d = a:ll[idx]
+    let d = a:ll[-1]
     return str2nr(d["unix_ts"])
 endfunction
 
@@ -83,32 +75,15 @@ function! CreateHotSpots()
         let filename = var["file"]
         if has_key(hotspots, filename)
             let tmp = hotspots[filename]
-            " Note -745 over num is exp() is 0.0
             let hotspots[filename] = tmp + 1.0 / (1.0 + exp((-12.0 * t) + 12.0))
         else
             let hotspots[filename] = 1.0 / (1.0 + exp((-12.0 * t) + 12.0))
         endif
     endfor
-    for line in SortPerList(items(hotspots))
-        call add(result, printf(" * %-50s : %.10f", line[0], line[1]))
+    for line in items(hotspots)
+        call add(result, printf(" * %-80s : %.10f", line[0], line[1]))
     endfor
     return result
-endfunction
-
-
-function! SortPerList(list)
-    let sort_list = []
-    echo len(a:list)
-    for line in a:list
-        if len(sort_list) == 0
-            call add(sort_list, line)
-        elseif line[1] == 0.0
-            call add(sort_list, line)
-        elseif line[1] > sort_list[0][1]
-            call insert(sort_list, line, 0)
-        endif
-    endfor
-    return sort_list
 endfunction
 
 
@@ -134,7 +109,7 @@ function! BugSpotsSyntaxSetting()
     syn match BSHyphen '\v\s(---)'
     syn match BSAsterisk '\v(\s\*\s)'
     syn match BSBorder '\v\s\:\s'
-    syn match BSValue '\v([0-9])\.([0-9]{10})'
+    syn match BSValue '\v([0-9]+)\.([0-9]{10})'
     hi def link BSHyphen Delimiter
     hi def link BSAsterisk Constant
     hi def link BS StorageClass

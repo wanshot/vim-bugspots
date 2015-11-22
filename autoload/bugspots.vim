@@ -6,7 +6,7 @@ set cpo&vim
 
 
 if !exists('g:bugspots_git_executable')
-  let g:bugspots_git_executable = "git log -p --name-only --pretty=format:'.%ct %s' > log"
+  let g:bugspots_git_executable = "git log -p --name-only --pretty=format:'a1b2c3%ct %s' > log"
 endif
 
 
@@ -20,18 +20,18 @@ function! bugspots#bugspots()
 endfunction
 
 
-function! s:LogMaker()
+function! bugspots#LogMaker()
     call system(g:bugspots_git_executable)
     let lines=readfile("log")
     let list_log = []
     for line in lines
-        if line[0] == "."
+        if line[0:5] == "a1b2c3"
             let dict = {}
             if "" !=#  matchstr(line, '\v(fix|close)\c')
                 let dict["unix_ts"] = matchstr(line, '\v\d{10}', 0)
                 call add(list_log, dict)
             endif
-        elseif line !=# ""
+        else
             call add(list_log , line)
         endif
     endfor
@@ -39,23 +39,25 @@ function! s:LogMaker()
 endfunction
 
 
-function! s:LogFormatter(ll)
-    let tmp = []
-    let result = []
-    for var in a:ll
-        if type(var) == type({})
-            call add(tmp, {"unix_ts": var["unix_ts"]})
-        else
-            try
-                let d = deepcopy(tmp[-1])
-                let d["file"] = var
-                call add(result, d)
-            catch
-            endtry
-        endif
-        unlet var
-    endfor
-    return result
+function! s:LogFormatter(list_log)
+  let tmp = []
+  let result = []
+  for var in a:list_log
+    if len(tmp) !=# 0
+      if type(var) == type({})
+        call add(tmp, {"unix_ts": var["unix_ts"]})
+      else
+        try
+          let d = deepcopy(tmp[-1])
+          let d["file"] = var
+          call add(result, d)
+        catch
+        endtry
+      endif
+      unlet var
+    endif
+  endfor
+  return result
 endfunction
 
 

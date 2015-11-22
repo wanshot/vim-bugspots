@@ -10,6 +10,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 command! Bugspots call bugspots#bugspots()
+command! Test call bugspots#LogMaker()
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

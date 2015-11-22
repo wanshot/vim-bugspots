@@ -1,0 +1,13 @@
+a1b2c31445385755 use deepcopy, delete sort method
+autoload/bugspots.vim
+
+a1b2c31445161765 fix typo
+plugin/bugspots.vim
+
+a1b2c31445161586 add bugspots.vim
+autoload/bugspots.vim
+plugin/bugspots.vim
+
+a1b2c31445076460 Initial commit
+LICENSE
+README.md
